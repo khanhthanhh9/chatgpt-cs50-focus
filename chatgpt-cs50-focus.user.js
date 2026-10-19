@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         ChatGPT CS50 Focus Mode
 // @namespace    chatgpt-cs50-focus
-// @version      5.0.6
-// @description  Locally validated 5.0.6 candidate. Actual ChatGPT history/image export coverage is unverified; origin-restricted images may be missing. Focus slides, native-DOM history discovery and one HTML export.
+// @version      5.0.7
+// @description  Locally validated 5.0.7 candidate. Actual ChatGPT history/image export coverage is unverified. Large Focus slides, concise style, native-DOM history discovery and one HTML export.
 // @match        https://chatgpt.com/*
 // @grant        none
 // @run-at       document-end
@@ -121,11 +121,12 @@
 ${MARKER}
 
 Format the answer for Focus slides.
-- Keep it as short as the request allows. Use plain words and short sentences.
-- Do not add "Key points", overview, recap, summary, or takeaway sections unless requested.
-- After a self-explanatory illustration, diagram, comparison, worked example, or bullet list, stop when the requested idea is conveyed. Do not append a trailing recap, takeaway, restatement, or explanation that repeats the same content unless explicitly requested. Keep necessary labels, definitions, and explanations that add new information.
-- Use --- between distinct slides. Keep each diagram, comparison, or calculator complete with its labels and outputs in one section.
-- Usually use 1–3 short sentences or at most 3 bullets on one slide.
+- Match the requested depth. For a simple definition, usually give one accurate sentence of about 10–20 words; use more only when accuracy or the request needs it.
+- A short definition should stand alone as large centered text, usually without a separate heading repeating its term.
+- For a longer idea, use a short nearby heading and left-aligned content. Split across slides at meaningful changes of idea, not to cram text into one slide.
+- Do not add subtitles or redundant captions, key points, recaps, takeaways, summaries, or restatements unless requested. This applies to unlabelled trailing text too.
+- After a self-explanatory illustration, diagram, comparison, worked example, or bullet list, stop when the requested idea is conveyed. Keep essential labels, definitions, explanations that add new information, and all explicitly requested detail.
+- Use --- between distinct slides. Keep each diagram, example, equation, code fragment, comparison, or calculator complete with its essential labels and outputs in one section.
 - Keep native Intelligent UI components—calculators, sliders, quizzes, games, charts, comparisons, and other widgets—in their normal interactive form. Add at most one short explanation around them unless more detail is requested.
 - Use images, tables, code, mathematics, or diagrams only when they clearly help.
 - For hidden semantic coloring, use these labels only when useful: **Important:** red; **Variable:** blue; **Constant:** violet; **Result:** green; **Example:** amber. **Warning:** is also red and **Definition:** is violet. The renderer removes the labels.
@@ -2159,6 +2160,104 @@ For code or mathematics: keep the complete small fragment or equation, add only 
     #cs50-slide-body .cs50-semantic-red {font-weight:650;}
     #cs50-slide-body [class*="cs50-semantic-"] {box-shadow:none !important;}
     #cs50-presenter.cs50-image-export-capture .cs50-preserve-tools {visibility:hidden;}
+    /* v5.0.7: one content block; readable text, quiet and reachable controls. */
+    #cs50-presenter:not(.cs50-fullscreen-image) {
+        grid-template-rows:auto minmax(0,1fr) auto !important;
+        gap:10px !important;
+        padding:14px clamp(18px,5vw,88px) 12px !important;
+    }
+    #cs50-presenter {
+        background-image:none !important; box-shadow:none !important;
+        perspective:none !important; filter:none !important; backdrop-filter:none !important;
+    }
+    #cs50-presenter #cs50-scene,
+    #cs50-presenter::before,#cs50-presenter::after,
+    #cs50-presenter #cs50-body-viewport::before {display:none !important;content:none !important;}
+    #cs50-presenter #cs50-title-wrap,#cs50-presenter #cs50-body-viewport,
+    #cs50-presenter #cs50-slide-title {transform:none !important;translate:none !important;filter:none !important;text-shadow:none !important;}
+    #cs50-content-stage {
+        position:relative;z-index:2;align-self:center;justify-self:center;
+        display:flex;flex-direction:column;gap:clamp(18px,3vh,32px);
+        width:min(1180px,100%);max-height:100%;min-height:0;min-width:0;
+    }
+    #cs50-presenter #cs50-title-wrap {
+        flex:none;min-height:0;display:flex;justify-content:flex-start;align-items:center;
+        padding:0 !important;
+    }
+    #cs50-presenter #cs50-slide-title {
+        width:100%;font-size:clamp(30px,4.3vw,var(--cs50-title-size));
+        text-align:left;line-height:1.08;letter-spacing:-.035em;
+    }
+    #cs50-presenter #cs50-body-viewport {
+        flex:0 1 auto;display:block;min-height:0;min-width:0;
+        overflow:hidden;padding:0 !important;
+    }
+    #cs50-presenter #cs50-slide-body {
+        width:100%;max-width:100%;max-height:none;min-height:0;
+        justify-content:flex-start;align-items:stretch;text-align:left;
+    }
+    #cs50-presenter #cs50-slide-body > :first-child {margin-top:0 !important;}
+    #cs50-presenter #cs50-slide-body > :last-child {margin-bottom:0 !important;}
+    #cs50-presenter #cs50-slide-body.cs50-hero > p:first-child {
+        font-size:inherit;line-height:1.3;max-width:none;text-wrap:pretty;
+    }
+    #cs50-presenter.cs50-definition-layout #cs50-content-stage {width:min(1100px,100%);}
+    #cs50-presenter.cs50-definition-layout #cs50-slide-body {
+        width:100%;line-height:1.22;letter-spacing:-.025em;text-align:center;
+    }
+    #cs50-presenter.cs50-definition-layout #cs50-slide-body.cs50-standard {text-align:center;}
+    #cs50-presenter.cs50-definition-layout #cs50-body-viewport {padding:0 !important;}
+    #cs50-presenter.cs50-definition-layout #cs50-slide-title {text-align:center;}
+    #cs50-presenter.cs50-definition-single #cs50-title-wrap {display:none !important;}
+    #cs50-presenter.cs50-keyword-only #cs50-content-stage {min-height:0;}
+    #cs50-presenter.cs50-keyword-only #cs50-title-wrap {min-height:0;display:block !important;}
+    #cs50-presenter.cs50-keyword-only #cs50-slide-title {text-align:center;}
+    #cs50-presenter.cs50-bounded-content #cs50-content-stage {height:100%;}
+    #cs50-presenter.cs50-bounded-content #cs50-body-viewport {flex:1 1 auto;}
+    #cs50-presenter.cs50-body-top #cs50-content-stage {align-self:start;}
+    #cs50-presenter #cs50-body-viewport.cs50-readable-overflow {
+        overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;
+    }
+    #cs50-presenter:has(.cs50-readable-overflow) #cs50-content-stage {align-self:start;}
+    #cs50-presenter.cs50-fullscreen-image #cs50-content-stage {width:100vw;height:100vh;max-height:100vh;gap:0;}
+    #cs50-presenter:not(.cs50-fullscreen-image) #cs50-topbar {
+        display:grid !important;opacity:1;transform:none;pointer-events:auto;
+        min-height:16px;font-size:10px;letter-spacing:.06em;
+    }
+    #cs50-theme-label {display:none;}
+    #cs50-live-label {grid-column:3;}
+    #cs50-presenter:not(.cs50-fullscreen-image) #cs50-footer {
+        display:grid !important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+        opacity:1;transform:none;pointer-events:auto;min-height:36px;gap:10px;
+    }
+    #cs50-presenter #cs50-min-counter {display:none !important;}
+    #cs50-presenter.cs50-zen:not(.cs50-fullscreen-image) #cs50-topbar,
+    #cs50-presenter.cs50-zen:not(.cs50-fullscreen-image) #cs50-footer {display:none !important;}
+    #cs50-input-hint {display:none;}
+    #cs50-actions {display:flex;justify-self:end;gap:4px;align-items:center;}
+    #cs50-actions button,#cs50-slide-nav button {
+        font:600 12px/1.2 system-ui;min-height:36px;min-width:36px;
+        border:1px solid transparent;border-radius:7px;background:transparent;
+        color:var(--cs50-muted);padding:7px 9px;cursor:pointer;
+    }
+    #cs50-slide-nav button {font-size:20px;}
+    #cs50-actions button:hover {background:var(--cs50-soft);color:var(--cs50-fg);}
+    #cs50-presenter button:focus-visible,#cs50-body-viewport:focus-visible {
+        outline:2px solid var(--cs50-blue);outline-offset:3px;
+    }
+    @media(max-width:640px) {
+        #cs50-presenter:not(.cs50-fullscreen-image) {padding:10px 18px !important;gap:8px !important;}
+        #cs50-content-stage {gap:18px;}
+        #cs50-presenter #cs50-slide-title {font-size:clamp(28px,7vw,40px);}
+        #cs50-presenter:not(.cs50-fullscreen-image) #cs50-footer {
+            grid-template-columns:1fr auto;row-gap:4px;
+        }
+        #cs50-response-counter {grid-row:1;grid-column:1;font-size:10px;}
+        #cs50-slide-nav {grid-row:1;grid-column:2;gap:3px;}
+        #cs50-actions {grid-row:2;grid-column:1/-1;justify-self:center;}
+        #cs50-trace-rail {max-width:24vw;overflow:hidden;}
+    }
+
     `;
 
     // v4.9: layout-first extraction. Native compositions are opaque; only the
@@ -4093,29 +4192,36 @@ For code or mathematics: keep the complete small fragment or equation, add only 
                 <div id="cs50-live-label"></div>
             </div>
 
+            <section id="cs50-content-stage" aria-label="Slide content">
             <div id="cs50-title-wrap">
                 <h1 id="cs50-slide-title"></h1>
             </div>
 
-            <div id="cs50-body-viewport">
+            <div id="cs50-body-viewport" tabindex="0" aria-label="Slide body">
                 <div id="cs50-slide-body" class="cs50-standard"></div>
             </div>
 
+            </section>
             <div id="cs50-footer">
                 <div id="cs50-response-counter"></div>
 
                 <div id="cs50-slide-nav">
-                    <button id="cs50-prev-slide" type="button" title="Previous slide">‹</button>
+                    <button id="cs50-prev-slide" type="button" title="Previous slide (← / k)" aria-label="Previous slide" aria-keyshortcuts="ArrowLeft k">‹</button>
                     <div id="cs50-trace-rail"></div>
                     <div id="cs50-trace-progress" aria-hidden="true">
                         <span id="cs50-trace-progress-text"></span>
                         <span id="cs50-trace-progress-track"><span id="cs50-trace-progress-fill"></span></span>
                     </div>
                     <span id="cs50-slide-counter">1 / 1</span>
-                    <button id="cs50-next-slide" type="button" title="Next slide">›</button>
+                    <button id="cs50-next-slide" type="button" title="Next slide (→ / j)" aria-label="Next slide" aria-keyshortcuts="ArrowRight j">›</button>
                 </div>
 
                 <div id="cs50-input-hint">i: ask · ?: keys</div>
+                <div id="cs50-actions" aria-label="Focus actions">
+                    <button id="cs50-ask-action" type="button" title="Ask (i)" aria-keyshortcuts="i">Ask</button>
+                    <button id="cs50-html-action" type="button" title="Export HTML (e)" aria-keyshortcuts="e">HTML</button>
+                    <button id="cs50-keys-action" type="button" title="Keyboard shortcuts (?)" aria-keyshortcuts="?">Keys</button>
+                </div>
             </div>
 
             <div id="cs50-min-counter">1 / 1</div>
@@ -4212,15 +4318,12 @@ For code or mathematics: keep the complete small fragment or equation, add only 
                         <div class="cs50-help-key">Paste image</div><div>in INSERT, attach clipboard image(s) to the native ChatGPT message</div>
                         <div class="cs50-help-key">Esc</div><div>INSERT → NORMAL</div>
                         <div class="cs50-help-key">t / T</div><div>next theme / open theme picker</div>
-                        <div class="cs50-help-key">b / B</div><div>next background / open scene picker</div>
                         <div class="cs50-help-key">m</div><div>cycle motion profile</div>
                         <div class="cs50-help-key">M</div><div>cycle ChatGPT reasoning: HIGH → MIDDLE → LOW (Instant)</div>
                         <div class="cs50-help-key">p</div><div>cycle visual preset</div>
                         <div class="cs50-help-key">P</div><div>toggle projector mode</div>
                         <div class="cs50-help-key">a / A</div><div>cycle current slide body override / reset Auto (MCQs auto Top-left)</div>
                         <div class="cs50-help-key">z</div><div>toggle distraction-free Zen mode</div>
-                        <div class="cs50-help-key">d</div><div>toggle Smart Spatial Depth (XREAL / large virtual display)</div>
-                        <div class="cs50-help-key">[ / ]</div><div>decrease / increase background intensity</div>
                         <div class="cs50-help-key">f</div><div>open live typography / font-size popup</div>
                         <div class="cs50-help-key">:</div><div>open visual command palette</div>
                         <div class="cs50-help-key">y / Y</div><div>copy current slide / source response</div>
@@ -4236,6 +4339,9 @@ For code or mathematics: keep the complete small fragment or equation, add only 
 
         document.body.appendChild(root);
 
+        root.querySelector('#cs50-ask-action').addEventListener('click', () => setMode('insert'));
+        root.querySelector('#cs50-html-action').addEventListener('click', () => exportHtmlDeck());
+        root.querySelector('#cs50-keys-action').addEventListener('click', () => toggleHelp());
         root.querySelector('#cs50-prev-slide').addEventListener('click', () => moveRelative(-1, { manual: true }));
         root.querySelector('#cs50-next-slide').addEventListener('click', () => moveRelative(1, { manual: true }));
         root.querySelector('#cs50-help').addEventListener('click', event => {
@@ -4415,7 +4521,7 @@ For code or mathematics: keep the complete small fragment or equation, add only 
             presenter.classList.toggle('cs50-projector', state.projector);
             presenter.classList.toggle('cs50-zen', state.zen);
             presenter.classList.toggle('cs50-reduced-motion', state.reducedMotion);
-            presenter.classList.toggle('cs50-spatial', state.spatialEnabled && !state.projector);
+            presenter.classList.remove('cs50-spatial');
             presenter.style.setProperty('--cs50-spatial-strength', String(state.spatialStrength));
             applyTypographyCss(presenter);
         }
@@ -4527,7 +4633,7 @@ For code or mathematics: keep the complete small fragment or equation, add only 
         clearSpatialDecoration(body);
         const fullscreen = Boolean(slide && (isFullscreenImageRequested(slide) || isFullscreenImageSlide(slide)));
         const layout = detectSlideLayout(slide);
-        const active = Boolean(state.spatialEnabled && !state.projector && slide && !fullscreen && layout !== 'rich-ui');
+        const active = false; // Clean presentation: no ambient/spatial decoration.
         presenter.classList.toggle('cs50-spatial', active);
         presenter.style.setProperty('--cs50-spatial-strength', String(state.spatialStrength));
         if (!active) return;
@@ -4683,7 +4789,7 @@ For code or mathematics: keep the complete small fragment or equation, add only 
                 { category: 'Export', label: 'HTML — discover history, slides + raw source', keywords: 'html all answers slides raw source codex conversation', action: () => exportHtmlDeck() },
             );
         }
-        return items;
+        return items.filter(item => !['Scene','Background'].includes(item.category) && !/spatial/i.test(item.keywords || ''));
     }
 
     function openCommandPalette(scope = 'all') {
@@ -4696,7 +4802,7 @@ For code or mathematics: keep the complete small fragment or equation, add only 
         presenter.classList.add('cs50-palette-open');
         presenter.classList.add('cs50-chrome-active');
         input.value = '';
-        input.placeholder = scope === 'all' ? 'Theme, scene, preset, motion, export…' : `Choose ${scope}…`;
+        input.placeholder = scope === 'all' ? 'Theme, type size, layout, export…' : `Choose ${scope}…`;
         renderCommandPalette();
         requestAnimationFrame(() => input.focus());
     }
@@ -8924,13 +9030,23 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
     }
 
     function isDefinitionSlide(slide) {
-        if (!slide || slide.isTrace || !String(slide.title || '').trim()) return false;
+        if (!slide || slide.isTrace) return false;
         const nodes = meaningfulTextNodes(slide);
-        if (!nodes.length || nodes.length > 3 || nodes.some(isVisualNode)) return false;
-        if (nodes.some(node => ['UL', 'OL', 'TABLE', 'PRE'].includes(node?.tagName))) return false;
-        const text = nodes.map(nodeText).join(' ').replace(/\s+/g, ' ').trim();
-        if (!text || text.length > 420) return false;
-        return DEFINITION_SLIDE_RE.test(nodeText(nodes[0]));
+        if (nodes.length !== 1 || nodes[0].tagName !== 'P' || isVisualNode(nodes[0])) return false;
+        if (nodes[0].querySelector('pre,code,math,svg,img,table,button,input,audio,video')) return false;
+        const text = nodeText(nodes[0]).replace(/\s+/g,' ').trim();
+        if (!text || text.length > 280 || text.split(/\s+/).length > 40) return false;
+        return !String(slide.title || '').trim() || DEFINITION_SLIDE_RE.test(text) || definitionRepeatsTitle(slide);
+    }
+
+    function definitionRepeatsTitle(slide) {
+        const clean = text => String(text || '').toLocaleLowerCase().replace(/[\p{P}\p{S}]/gu,' ').replace(/\s+/g,' ').trim();
+        const title = clean(slide?.title);
+        if (!title) return false;
+        const body = clean(nodeText(meaningfulTextNodes(slide)[0]).replace(DEFINITION_SLIDE_RE,'')).replace(/^(?:an?|the) /,'');
+        // Hide only a repeated leading term. Never delete the source heading or
+        // guess whether a later sentence/caption is redundant.
+        return body === title || body.startsWith(title+' ');
     }
 
     function isHeroSlide(slide) {
@@ -9263,7 +9379,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         presenter.dataset.theme = THEMES[state.themeIndex];
         presenter.dataset.scene = SCENES[state.sceneIndex];
         presenter.dataset.motion = state.reducedMotion ? 'instant' : MOTIONS[state.motionIndex];
-        presenter.classList.toggle('cs50-spatial', state.spatialEnabled && !state.projector);
+        presenter.classList.remove('cs50-spatial');
         presenter.style.setProperty('--cs50-spatial-strength', String(state.spatialStrength));
         const fullscreenImage = Boolean(slide && (isFullscreenImageRequested(slide) || isFullscreenImageSlide(slide)));
         const hasVisibleTitle = Boolean(slide && !fullscreenImage && String(slide.title || '').trim());
@@ -9272,6 +9388,8 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         presenter.classList.toggle('cs50-no-title', Boolean(slide && !fullscreenImage && !hasVisibleTitle));
         presenter.classList.toggle('cs50-keyword-only', presentationLayout === 'keyword');
         presenter.classList.toggle('cs50-definition-layout', presentationLayout === 'definition');
+        presenter.classList.toggle('cs50-definition-single', presentationLayout === 'definition' && (!hasVisibleTitle || definitionRepeatsTitle(slide)));
+        presenter.classList.toggle('cs50-bounded-content', ['rich-ui','image'].includes(presentationLayout));
 
         if (!slide) {
             releaseRichUiMirror();
@@ -9382,7 +9500,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
                 : (state.mode === 'insert' ? 'INSERT' : (slide?.isTrace ? 'TRACE' : 'NORMAL'));
             modeLabel.textContent = reasoningLabel ? `${baseMode} · ${reasoningLabel}` : baseMode;
         }
-        if (themeLabel) themeLabel.textContent = `${prettyVisualName(THEMES[state.themeIndex])} · ${prettyVisualName(SCENES[state.sceneIndex])}${state.spatialEnabled && !state.projector ? ' · SPATIAL' : ''}`;
+        if (themeLabel) themeLabel.textContent = prettyVisualName(THEMES[state.themeIndex]);
         if (inputHint) inputHint.textContent = `i: ask · v: voice ${voiceLabel.toLowerCase()} · e: export HTML · ?: keys`;
         if (composerAttachments) composerAttachments.textContent = state.clipboardImageCount ? `${state.clipboardImageCount} image${state.clipboardImageCount === 1 ? '' : 's'} attached` : '';
         if (composerMode) composerMode.textContent = reasoningLabel ? `INSERT · ${reasoningLabel} · VOICE ${voiceLabel}` : `INSERT · VOICE ${voiceLabel}`;
@@ -9558,8 +9676,8 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         return [slide.nodes.slice(0, splitIndex), slide.nodes.slice(splitIndex)];
     }
 
-    function tryAutoSplitCurrentSlide() {
-        if (state.splitInProgress || state.streaming || state.htmlExporting) return false;
+    function tryAutoSplitCurrentSlide({ allowDuringExport = false } = {}) {
+        if (state.splitInProgress || state.streaming || (state.htmlExporting && !allowDuringExport)) return false;
         const response = currentResponseModel();
         const slide = currentSlideModel();
         if (!response || !slide) return false;
@@ -9572,7 +9690,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         const parts = halves.map((nodes, index) => ({
             ...slide,
             id: ++slideIdCounter,
-            title: baseTitle ? `${baseTitle} · ${index + 1}/2` : '',
+            title: baseTitle,
             baseTitle,
             nodes,
             virtual: true,
@@ -9630,19 +9748,35 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         body.querySelectorAll('[data-cs50-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.cs50View===mode)));
     }
 
-    function fitCurrentSlide() {
+    function fitCurrentSlide({ allowExportSplit = false } = {}) {
         if (!state.enabled) return;
         if (isFullscreenImageSlide(currentSlideModel())) return;
         const body = document.getElementById('cs50-slide-body');
         const viewport = document.getElementById('cs50-body-viewport');
         if (!body || !viewport) return;
 
+        const stage = document.getElementById('cs50-content-stage');
+        if (stage) stage.style.height = '';
+        body.style.minHeight = '';
         viewport.classList.remove('cs50-readable-overflow');
         viewport.title = '';
         body.style.maxHeight = '';
         const layout = detectSlideLayout(currentSlideModel());
         if (layout === 'rich-ui') {
             fitRichUiSlide(body, viewport);
+            // Keep the heading next to a short preserved composition. The first
+            // fit establishes readable dimensions; shrink the empty frame only,
+            // then refit at those same dimensions. Large widgets keep scrolling.
+            const frame = body.querySelector('.cs50-rich-ui-frame');
+            const sizer = body.querySelector('.cs50-preserve-sizer');
+            if (stage && frame && sizer) {
+                const chrome = stage.clientHeight - frame.clientHeight;
+                const needed = Math.ceil(chrome + sizer.offsetHeight + 32);
+                if (needed < stage.clientHeight - 2) {
+                    stage.style.height = needed + 'px';
+                    fitRichUiSlide(body, viewport);
+                }
+            }
             return;
         }
         const imageTextSlide = layout === 'image';
@@ -9650,24 +9784,15 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         body.style.transform = '';
         body.style.width = '';
 
+        // Requested typography is retained at every viewport. Split prose at
+        // semantic boundaries before considering scrolling; never shrink it to fit.
         const start = defaultBodyFontPx();
-        const requestedMin = currentSlideModel()?.isTrace
-            ? MIN_TRACE_FONT_PX
-            : (imageTextSlide ? Math.max(MIN_IMAGE_TEXT_FONT_PX, MIN_BODY_FONT_PX) : MIN_BODY_FONT_PX);
-        const min = Math.min(start, requestedMin);
         setBodyFontSize(body, start);
+        // Include descendant ink/line boxes in the natural block height, so a
+        // small equation or code panel does not acquire a needless scrollbar.
+        if (body.scrollHeight > body.clientHeight + 1) body.style.minHeight = body.scrollHeight + 'px';
         if (!isOverflowing(body, viewport)) return;
-
-        body.classList.add('cs50-compact');
-        if (imageTextSlide) body.classList.add('cs50-image-tight');
-        if (!isOverflowing(body, viewport)) return;
-
-        const fitted = fitByBinarySearch(body, viewport, min, start - 1);
-        if (fitted != null && !isOverflowing(body, viewport)) return;
-
-        setBodyFontSize(body, min);
-        if (!imageTextSlide && tryAutoSplitCurrentSlide()) return;
-        if (!isOverflowing(body, viewport)) return;
+        if (!imageTextSlide && tryAutoSplitCurrentSlide({allowDuringExport:allowExportSplit})) return;
 
         // There is no legal scale that makes arbitrary content both readable
         // and bounded. Keep readable text; make overflow reachable explicitly.
@@ -10481,7 +10606,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         'mask-image','mask-size','mask-repeat','mask-position','mask-mode','mask-type','mask',
         '-webkit-text-fill-color','-webkit-text-stroke-color','-webkit-text-stroke-width','content','perspective','perspective-origin','transform-style','backface-visibility','translate','rotate','scale'
     ])]);
-    const HTML_EXPORT_SKIP = 'script,style,link,base,meta,template,noscript,object,embed,#cs50-composer,#cs50-palette,#cs50-overview,#cs50-image-zoom,#cs50-sources,#cs50-help,#cs50-generation,#cs50-html-export-progress,#cs50-scene,#cs50-source-chip,#cs50-toast,#cs50-min-counter';
+    const HTML_EXPORT_SKIP = 'script,style,link,base,meta,template,noscript,object,embed,#cs50-composer,#cs50-palette,#cs50-overview,#cs50-image-zoom,#cs50-sources,#cs50-help,#cs50-generation,#cs50-html-export-progress,#cs50-scene,#cs50-source-chip,#cs50-toast,#cs50-min-counter,#cs50-actions';
     const HTML_EXPORT_ATTRS = new Set(('id class role title alt width height viewBox preserveAspectRatio d '+
         'x y x1 x2 y1 y2 cx cy r rx ry points pathLength transform xmlns xmlns:xlink '+
         'fill fill-rule fill-opacity stroke stroke-width stroke-linecap stroke-linejoin stroke-dasharray '+
@@ -11153,7 +11278,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         const info = document.getElementById('fx-notes'), overview = document.getElementById('fx-overview');
         const fitButton = document.getElementById('fx-fit'), readableButton = document.getElementById('fx-readable');
         let index = Math.max(0,Math.min(deck.slides.length-1,Number(location.hash.slice(1))-1 || 0));
-        let mode = 'auto', dims = {}, loaded = false;
+        let mode = 'readable', dims = {}, loaded = false;
         deck.slides.forEach((slide, n) => {
             const option = document.createElement('option');option.value=n;option.textContent=`${n+1}. ${slide.title}`;choice.appendChild(option);
             const button=document.createElement('button');button.textContent=`${n+1}. ${slide.title}`;
@@ -11163,7 +11288,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
             const aw=Math.max(1,viewport.clientWidth-24), ah=Math.max(1,viewport.clientHeight-24);
             const natural=Math.min(1.8,aw/dims.width,ah/dims.height);
             const readable=mode==='readable'||mode==='auto'&&natural<.65;
-            const scale=readable?Math.max(.75,Math.min(1,aw/dims.width)):natural;
+            const scale=readable?1:natural; // Preserve captured text size; Fit is an explicit choice.
             frame.style.width=dims.width+'px';frame.style.height=dims.height+'px';
             frame.style.transform=`scale(${scale})`;shell.style.width=dims.width*scale+'px';shell.style.height=dims.height*scale+'px';
             shell.style.marginLeft=Math.max(0,(aw-dims.width*scale)/2)+'px';shell.style.marginTop=Math.max(0,(ah-dims.height*scale)/2)+'px';
@@ -11222,7 +11347,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         show(index);
     }
     function buildHtmlDeckDocument(slides, context, title, sourceUrl='', source=null) {
-        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.6',appearance:'presenter',bridge:context.nonce,title,
+        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.7',appearance:'presenter',bridge:context.nonce,title,
             createdAt:context.startedAt,sourceUrl,slides,sourceManifestId:'fx-source'};
         const nonce=context.nonce;
         return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; frame-src about:; child-src about:; img-src data:; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; base-uri 'none'; form-action 'none'; connect-src 'none'"><title>${htmlEscape(title)}</title><style>
@@ -11283,7 +11408,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
     async function buildHtmlDeckBlob(slides,context,title,sourceUrl,source,progress) {
         const slots={source:`CS50_SOURCE_${context.nonce}`,data:`CS50_DATA_${context.nonce}`};
         const template=buildHtmlDeckDocument([],{...context,jsonPlaceholders:slots},title,sourceUrl,null);
-        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.6',appearance:'presenter',bridge:context.nonce,title,
+        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.7',appearance:'presenter',bridge:context.nonce,title,
             createdAt:context.startedAt,sourceUrl,slides,sourceManifestId:'fx-source'};
         const sourceAt=template.indexOf(slots.source),dataAt=template.indexOf(slots.data);
         if(sourceAt<0||dataAt<=sourceAt)throw new Error('HTML serialization template is unavailable');
@@ -11407,6 +11532,24 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
     function htmlHistoryRead(blob) {
         return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{try{resolve(JSON.parse(reader.result));}catch(error){reject(error);}};reader.onerror=()=>reject(reader.error);reader.readAsText(blob);});
     }
+    async function htmlPaginateReadableResponse(response,context) {
+        // This response is the transaction-local fresh DOM model used by history
+        // discovery. Paginate it before freezing slide IDs and capturing HTML.
+        // Viewer caches and the saved conversation models remain untouched.
+        for (let index=0;index<(response.slides?.length||0);index++) {
+            let changed;
+            do {
+                htmlHistoryCheck(context);
+                state.currentSlide=index;state.lastRender=null;
+                renderPresentation({force:true});await nextPaint();
+                await htmlHistoryBounded(document.fonts?.ready||Promise.resolve(),1200,context);
+                const count=response.slides.length;
+                fitCurrentSlide({allowExportSplit:true});
+                changed=response.slides.length!==count;
+            } while(changed);
+        }
+    }
+
     async function htmlCaptureHistoryAnswer(answer,key,context,progress) {
         htmlHistoryCheck(context);
         if(!answer.isConnected)return null;
@@ -11424,6 +11567,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
             const response=parseResponse(answer);
             if(!answer.isConnected)return null;
             state.responses=[response];state.currentResponse=0;state.currentSlide=0;
+            await htmlPaginateReadableResponse(response,context);
             const models=collectHtmlExportSlides(),source=collectHtmlSource(models.length?models:[{responseIndex:0,slideIndex:0,slide:{title:''}}]);
             for(const item of source.answers)item.responseKey=key;
             for(let index=0;index<source.slides.length;index++)source.slides[index].stableId=key+'/slide/'+(index+1);
@@ -12139,6 +12283,11 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         const widgetKey = event.composedPath?.().some(node => node instanceof Element &&
             (node.classList.contains('cs50-rich-ui-content') || node === activeRichUiMirror?.source));
         if (widgetKey) return;
+        // Focus buttons retain native Enter/Space activation. Focused overflow
+        // regions retain vertical scrolling; slide navigation elsewhere stays.
+        if ([' ','Enter'].includes(event.key) && event.composedPath().some(node => node instanceof Element && node.matches('button,a[href],summary'))) return;
+        if (event.target?.id === 'cs50-body-viewport' && event.target.classList.contains('cs50-readable-overflow') && ['ArrowUp','ArrowDown','PageUp','PageDown','Home','End'].includes(event.key)) return;
+
 
         if (state.generationActive && event.key === 'Escape') {
             event.preventDefault();
@@ -12285,11 +12434,11 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
                 return;
             case 'b':
                 event.preventDefault();
-                cycleScene(1);
+                toast('Plain background is enabled');
                 return;
             case 'B':
                 event.preventDefault();
-                openCommandPalette('scene');
+                toast('Plain background is enabled');
                 return;
             case 'm':
                 event.preventDefault();
@@ -12321,7 +12470,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
                 return;
             case 'd':
                 event.preventDefault();
-                toggleSpatialMode();
+                toast('Clean presentation uses no spatial effects');
                 return;
             case 'v':
                 event.preventDefault();
@@ -12329,11 +12478,11 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
                 return;
             case '[':
                 event.preventDefault();
-                adjustSceneIntensity(-.08);
+                toast('Plain background is enabled');
                 return;
             case ']':
                 event.preventDefault();
-                adjustSceneIntensity(.08);
+                toast('Plain background is enabled');
                 return;
             case 'f':
                 event.preventDefault();
