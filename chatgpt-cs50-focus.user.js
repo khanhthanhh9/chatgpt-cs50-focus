@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         ChatGPT CS50 Focus Mode
 // @namespace    chatgpt-cs50-focus
-// @version      5.0.8
-// @description  Locally validated 5.0.8 candidate. Actual ChatGPT behavior remains unverified. Complete slide headings, visible definition terms and one HTML export.
+// @version      5.0.9
+// @description  Locally validated 5.0.9 candidate. Actual ChatGPT installation and original truncated tab remain unverified. Preserve native heading pairs and one HTML export.
 // @match        https://chatgpt.com/*
 // @grant        none
 // @run-at       document-end
@@ -19,6 +19,7 @@
     // CONFIG
     // =========================================================
 
+    const FOCUS_BUILD = '5.0.9';
     const MARKER = '[[CS50_FOCUS_PRIVATE]]';
     const STREAM_IDLE_MS = 850;
     const G_PREFIX_TIMEOUT_MS = 650;
@@ -1652,6 +1653,20 @@ For code or mathematics: keep the complete small fragment or equation, add only 
 
     #cs50-presenter.cs50-keyword-only #cs50-slide-title.cs50-title-very-long {
         font-size: clamp(38px, 4.6vw, calc(var(--cs50-keyword-size) * .76));
+    }
+
+    /* Native definition bodies may be H2 rather than P. Keep body typography
+       while preserving their inline emphasis and the source DOM verbatim. */
+    #cs50-presenter.cs50-definition-layout #cs50-slide-body > :is(h1,h2,h3,h4,h5,h6,[role="heading"]) {
+        font-size: inherit !important;
+        font-weight: 400 !important;
+        line-height: inherit !important;
+        text-align: inherit !important;
+        margin: 0 !important;
+    }
+
+    #cs50-presenter.cs50-definition-layout #cs50-slide-body [data-d-default-strong] {
+        font-weight: 600;
     }
 
     #cs50-presenter.cs50-definition-layout {
@@ -3309,6 +3324,7 @@ For code or mathematics: keep the complete small fragment or equation, add only 
         document.querySelectorAll('#cs50-focus-style-v422, #cs50-focus-style, #cs50-focus-style-v31, #cs50-focus-style-v32, #cs50-focus-style-v33, #cs50-focus-style-v39, #cs50-focus-style-v391, #cs50-focus-style-v392, #cs50-focus-style-v393, #cs50-focus-style-v394, #cs50-focus-style-v395, #cs50-focus-style-v396, #cs50-focus-style-v400, #cs50-focus-style-v410, #cs50-focus-style-v420, #cs50-focus-style-v421, #cs50-focus-style-v480').forEach(el => el.remove());
         const style = document.createElement('style');
         style.id = 'cs50-focus-style-v490';
+        style.dataset.cs50Build = FOCUS_BUILD;
         style.textContent = css;
         document.head.appendChild(style);
     }
@@ -3910,9 +3926,24 @@ For code or mathematics: keep the complete small fragment or equation, add only 
             if (isRichUiNode(block)) { current.nodes.push(block); continue; }
             if (parserIsBreak(block)) { flush(); continue; }
             if (parserIsHeading(block)) {
-                // A heading following real content starts a slide even when HRs
-                // exist elsewhere. Consecutive headings are not blank slides.
+                // Native UI can render a term as H1 and its definition as H2.
+                // Keep that hierarchy together instead of overwriting the term.
                 if (current.nodes.length) flush();
+                else if (current.heading && normalizeSlideTitle(nodeText(current.heading))) {
+                    const nextText = normalizeSlideTitle(nodeText(block));
+                    if (!nextText) continue; // A streaming placeholder cannot replace a real term.
+                    const level = node => Number(node.tagName?.match(/^H([1-6])$/)?.[1] || node.getAttribute('aria-level')) || 6;
+                    const term = normalizeSlideTitle(nodeText(current.heading));
+                    const shortTerm = term.length <= 80 && term.split(/\s+/).length <= 8;
+                    const definitionSentence = shortTerm && nextText.length <= 280 &&
+                        nextText.split(/\s+/).length <= 40 && /[.!?。！？]$/.test(nextText);
+                    if (level(block) > level(current.heading) || definitionSentence) {
+                        current.nodes.push(block);
+                        continue;
+                    }
+                    // Separate peer headings remain separate slides; neither is lost.
+                    flush();
+                }
                 current.heading = block;
             } else current.nodes.push(block);
         }
@@ -4173,6 +4204,7 @@ For code or mathematics: keep the complete small fragment or equation, add only 
 
         const root = document.createElement('section');
         root.id = 'cs50-presenter';
+        root.dataset.cs50Build = FOCUS_BUILD;
         root.setAttribute('aria-label', 'CS50 Focus presentation');
         root.dataset.theme = THEMES[state.themeIndex];
         root.dataset.scene = SCENES[state.sceneIndex];
@@ -9035,7 +9067,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
     function isDefinitionSlide(slide) {
         if (!slide || slide.isTrace) return false;
         const nodes = meaningfulTextNodes(slide);
-        if (nodes.length !== 1 || nodes[0].tagName !== 'P' || isVisualNode(nodes[0])) return false;
+        if (nodes.length !== 1 || !nodes[0].matches('p,h1,h2,h3,h4,h5,h6,[role="heading"]') || isVisualNode(nodes[0])) return false;
         if (nodes[0].querySelector('pre,code,math,svg,img,table,button,input,audio,video')) return false;
         const text = nodeText(nodes[0]).replace(/\s+/g,' ').trim();
         if (!text || text.length > 280 || text.split(/\s+/).length > 40) return false;
@@ -9503,7 +9535,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
             const baseMode = state.voiceArmed
                 ? `VOICE ${voiceLabel}`
                 : (state.mode === 'insert' ? 'INSERT' : (slide?.isTrace ? 'TRACE' : 'NORMAL'));
-            modeLabel.textContent = reasoningLabel ? `${baseMode} · ${reasoningLabel}` : baseMode;
+            modeLabel.textContent = `${reasoningLabel ? `${baseMode} · ${reasoningLabel}` : baseMode} · v${FOCUS_BUILD}`;
         }
         if (themeLabel) themeLabel.textContent = prettyVisualName(THEMES[state.themeIndex]);
         if (inputHint) inputHint.textContent = `i: ask · v: voice ${voiceLabel.toLowerCase()} · e: export HTML · ?: keys`;
@@ -11363,7 +11395,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         show(index);
     }
     function buildHtmlDeckDocument(slides, context, title, sourceUrl='', source=null) {
-        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.8',appearance:'presenter',bridge:context.nonce,title,
+        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.9',appearance:'presenter',bridge:context.nonce,title,
             createdAt:context.startedAt,sourceUrl,slides,sourceManifestId:'fx-source'};
         const nonce=context.nonce;
         return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; frame-src about:; child-src about:; img-src data:; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; base-uri 'none'; form-action 'none'; connect-src 'none'"><title>${htmlEscape(title)}</title><style>
@@ -11424,7 +11456,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
     async function buildHtmlDeckBlob(slides,context,title,sourceUrl,source,progress) {
         const slots={source:`CS50_SOURCE_${context.nonce}`,data:`CS50_DATA_${context.nonce}`};
         const template=buildHtmlDeckDocument([],{...context,jsonPlaceholders:slots},title,sourceUrl,null);
-        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.8',appearance:'presenter',bridge:context.nonce,title,
+        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.9',appearance:'presenter',bridge:context.nonce,title,
             createdAt:context.startedAt,sourceUrl,slides,sourceManifestId:'fx-source'};
         const sourceAt=template.indexOf(slots.source),dataAt=template.indexOf(slots.data);
         if(sourceAt<0||dataAt<=sourceAt)throw new Error('HTML serialization template is unavailable');

@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         ChatGPT CS50 Focus Mode
 // @namespace    chatgpt-cs50-focus
-// @version      5.0.8
-// @description  Locally validated 5.0.8 candidate. Actual ChatGPT behavior remains unverified. Complete slide headings, visible definition terms and one HTML export.
+// @version      5.0.9
+// @description  Locally validated 5.0.9 candidate. Actual ChatGPT installation and original truncated tab remain unverified. Preserve native heading pairs and one HTML export.
 // @match        https://chatgpt.com/*
 // @grant        none
 // @run-at       document-end
