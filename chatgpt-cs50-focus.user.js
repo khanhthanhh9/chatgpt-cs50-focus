@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         ChatGPT CS50 Focus Mode
 // @namespace    chatgpt-cs50-focus
-// @version      5.0.7
-// @description  Locally validated 5.0.7 candidate. Actual ChatGPT history/image export coverage is unverified. Large Focus slides, concise style, native-DOM history discovery and one HTML export.
+// @version      5.0.8
+// @description  Locally validated 5.0.8 candidate. Actual ChatGPT behavior remains unverified. Complete slide headings, visible definition terms and one HTML export.
 // @match        https://chatgpt.com/*
 // @grant        none
 // @run-at       document-end
@@ -122,7 +122,7 @@ ${MARKER}
 
 Format the answer for Focus slides.
 - Match the requested depth. For a simple definition, usually give one accurate sentence of about 10–20 words; use more only when accuracy or the request needs it.
-- A short definition should stand alone as large centered text, usually without a separate heading repeating its term.
+- Every definition slide must show the TERM as a large centered heading, with the complete definition immediately below. Vertically center the whole term-and-definition group; never omit the term, even when the definition repeats it. Do not add a redundant subtitle or recap.
 - For a longer idea, use a short nearby heading and left-aligned content. Split across slides at meaningful changes of idea, not to cram text into one slide.
 - Do not add subtitles or redundant captions, key points, recaps, takeaways, summaries, or restatements unless requested. This applies to unlabelled trailing text too.
 - After a self-explanatory illustration, diagram, comparison, worked example, or bullet list, stop when the requested idea is conveyed. Keep essential labels, definitions, explanations that add new information, and all explicitly requested detail.
@@ -2208,7 +2208,6 @@ For code or mathematics: keep the complete small fragment or equation, add only 
     #cs50-presenter.cs50-definition-layout #cs50-slide-body.cs50-standard {text-align:center;}
     #cs50-presenter.cs50-definition-layout #cs50-body-viewport {padding:0 !important;}
     #cs50-presenter.cs50-definition-layout #cs50-slide-title {text-align:center;}
-    #cs50-presenter.cs50-definition-single #cs50-title-wrap {display:none !important;}
     #cs50-presenter.cs50-keyword-only #cs50-content-stage {min-height:0;}
     #cs50-presenter.cs50-keyword-only #cs50-title-wrap {min-height:0;display:block !important;}
     #cs50-presenter.cs50-keyword-only #cs50-slide-title {text-align:center;}
@@ -2258,6 +2257,10 @@ For code or mathematics: keep the complete small fragment or equation, add only 
         #cs50-trace-rail {max-width:24vw;overflow:hidden;}
     }
 
+    /* v5.0.8: complete headings and definition terms remain part of the group. */
+    #cs50-presenter #cs50-content-stage.cs50-heading-overflow {overflow:auto;overscroll-behavior:contain;align-self:start;}
+    #cs50-presenter #cs50-content-stage.cs50-heading-overflow #cs50-body-viewport {flex:none;overflow:visible;}
+    #cs50-content-stage:focus-visible {outline:2px solid var(--cs50-blue);outline-offset:4px;}
     `;
 
     // v4.9: layout-first extraction. Native compositions are opaque; only the
@@ -3814,7 +3817,7 @@ For code or mathematics: keep the complete small fragment or equation, add only 
         // Ignore punctuation when deciding whether a heading is only a placeholder.
         const bare = title.replace(/^#+\s*/, '').replace(/[\s:;,.!–—-]+$/g, '').trim();
         if (!bare || LOW_VALUE_TITLE_RE.test(bare)) return '';
-        return bare.length > 86 ? `${bare.slice(0, 83)}…` : bare;
+        return title.replace(/^#+\s*/, ''); // Preserve complete text and punctuation; wrap it.
     }
 
     function nodeHasMeaningfulSlideContent(node) {
@@ -4192,7 +4195,7 @@ For code or mathematics: keep the complete small fragment or equation, add only 
                 <div id="cs50-live-label"></div>
             </div>
 
-            <section id="cs50-content-stage" aria-label="Slide content">
+            <section id="cs50-content-stage" tabindex="0" aria-label="Slide content">
             <div id="cs50-title-wrap">
                 <h1 id="cs50-slide-title"></h1>
             </div>
@@ -9036,7 +9039,9 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         if (nodes[0].querySelector('pre,code,math,svg,img,table,button,input,audio,video')) return false;
         const text = nodeText(nodes[0]).replace(/\s+/g,' ').trim();
         if (!text || text.length > 280 || text.split(/\s+/).length > 40) return false;
-        return !String(slide.title || '').trim() || DEFINITION_SLIDE_RE.test(text) || definitionRepeatsTitle(slide);
+        const term = String(slide.title || '').trim();
+        const shortTerm = term.length <= 80 && term.split(/\s+/).length <= 8 && !/[?？]/.test(term);
+        return !term || DEFINITION_SLIDE_RE.test(text) || definitionRepeatsTitle(slide) || shortTerm;
     }
 
     function definitionRepeatsTitle(slide) {
@@ -9388,7 +9393,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         presenter.classList.toggle('cs50-no-title', Boolean(slide && !fullscreenImage && !hasVisibleTitle));
         presenter.classList.toggle('cs50-keyword-only', presentationLayout === 'keyword');
         presenter.classList.toggle('cs50-definition-layout', presentationLayout === 'definition');
-        presenter.classList.toggle('cs50-definition-single', presentationLayout === 'definition' && (!hasVisibleTitle || definitionRepeatsTitle(slide)));
+        presenter.classList.remove('cs50-definition-single'); // A supplied definition term must always remain visible.
         presenter.classList.toggle('cs50-bounded-content', ['rich-ui','image'].includes(presentationLayout));
 
         if (!slide) {
@@ -9756,7 +9761,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         if (!body || !viewport) return;
 
         const stage = document.getElementById('cs50-content-stage');
-        if (stage) stage.style.height = '';
+        if (stage) { stage.style.height = ''; stage.classList.remove('cs50-heading-overflow'); stage.title = ''; }
         body.style.minHeight = '';
         viewport.classList.remove('cs50-readable-overflow');
         viewport.title = '';
@@ -9788,6 +9793,17 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         // semantic boundaries before considering scrolling; never shrink it to fit.
         const start = defaultBodyFontPx();
         setBodyFontSize(body, start);
+        const titleWrap = document.getElementById('cs50-title-wrap');
+        const lineHeight = parseFloat(getComputedStyle(body).lineHeight) || start * 1.3;
+        // An unusually tall heading can consume the complete content slot.
+        // Keep the whole group scrollable instead of collapsing the body to zero
+        // height or shrinking/cutting the heading. Ordinary prose still splits.
+        if (stage && titleWrap && (titleWrap.offsetHeight > stage.clientHeight ||
+            (body.childNodes.length && viewport.clientHeight < lineHeight))) {
+            stage.classList.add('cs50-heading-overflow');
+            stage.title = 'Scroll to read the complete heading and content';
+            return;
+        }
         // Include descendant ink/line boxes in the natural block height, so a
         // small equation or code panel does not acquire a needless scrollbar.
         if (body.scrollHeight > body.clientHeight + 1) body.style.minHeight = body.scrollHeight + 'px';
@@ -11347,7 +11363,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         show(index);
     }
     function buildHtmlDeckDocument(slides, context, title, sourceUrl='', source=null) {
-        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.7',appearance:'presenter',bridge:context.nonce,title,
+        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.8',appearance:'presenter',bridge:context.nonce,title,
             createdAt:context.startedAt,sourceUrl,slides,sourceManifestId:'fx-source'};
         const nonce=context.nonce;
         return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; frame-src about:; child-src about:; img-src data:; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; base-uri 'none'; form-action 'none'; connect-src 'none'"><title>${htmlEscape(title)}</title><style>
@@ -11408,7 +11424,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
     async function buildHtmlDeckBlob(slides,context,title,sourceUrl,source,progress) {
         const slots={source:`CS50_SOURCE_${context.nonce}`,data:`CS50_DATA_${context.nonce}`};
         const template=buildHtmlDeckDocument([],{...context,jsonPlaceholders:slots},title,sourceUrl,null);
-        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.7',appearance:'presenter',bridge:context.nonce,title,
+        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.8',appearance:'presenter',bridge:context.nonce,title,
             createdAt:context.startedAt,sourceUrl,slides,sourceManifestId:'fx-source'};
         const sourceAt=template.indexOf(slots.source),dataAt=template.indexOf(slots.data);
         if(sourceAt<0||dataAt<=sourceAt)throw new Error('HTML serialization template is unavailable');
@@ -12287,6 +12303,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         // regions retain vertical scrolling; slide navigation elsewhere stays.
         if ([' ','Enter'].includes(event.key) && event.composedPath().some(node => node instanceof Element && node.matches('button,a[href],summary'))) return;
         if (event.target?.id === 'cs50-body-viewport' && event.target.classList.contains('cs50-readable-overflow') && ['ArrowUp','ArrowDown','PageUp','PageDown','Home','End'].includes(event.key)) return;
+        if (event.target?.id === 'cs50-content-stage' && event.target.classList.contains('cs50-heading-overflow') && ['ArrowUp','ArrowDown','PageUp','PageDown','Home','End'].includes(event.key)) return;
 
 
         if (state.generationActive && event.key === 'Escape') {
