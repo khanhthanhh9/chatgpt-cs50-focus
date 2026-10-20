@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         ChatGPT CS50 Focus Mode
 // @namespace    chatgpt-cs50-focus
-// @version      5.0.9
-// @description  Locally validated 5.0.9 candidate. Actual ChatGPT installation and original truncated tab remain unverified. Preserve native heading pairs and one HTML export.
+// @version      5.0.10
+// @description  Locally validated 5.0.10 candidate. Actual ChatGPT behavior remains unverified. Requested content only, complete definitions and HTML export.
 // @match        https://chatgpt.com/*
 // @grant        none
 // @run-at       document-end
@@ -19,7 +19,7 @@
     // CONFIG
     // =========================================================
 
-    const FOCUS_BUILD = '5.0.9';
+    const FOCUS_BUILD = '5.0.10';
     const MARKER = '[[CS50_FOCUS_PRIVATE]]';
     const STREAM_IDLE_MS = 850;
     const G_PREFIX_TIMEOUT_MS = 650;
@@ -122,24 +122,25 @@
 ${MARKER}
 
 Format the answer for Focus slides.
+- Answer only the requested content. Do not append tips, advice, suggestions, follow-up questions, or offers unless explicitly requested. Stop once the answer is complete.
 - Match the requested depth. For a simple definition, usually give one accurate sentence of about 10–20 words; use more only when accuracy or the request needs it.
 - Every definition slide must show the TERM as a large centered heading, with the complete definition immediately below. Vertically center the whole term-and-definition group; never omit the term, even when the definition repeats it. Do not add a redundant subtitle or recap.
 - For a longer idea, use a short nearby heading and left-aligned content. Split across slides at meaningful changes of idea, not to cram text into one slide.
 - Do not add subtitles or redundant captions, key points, recaps, takeaways, summaries, or restatements unless requested. This applies to unlabelled trailing text too.
-- After a self-explanatory illustration, diagram, comparison, worked example, or bullet list, stop when the requested idea is conveyed. Keep essential labels, definitions, explanations that add new information, and all explicitly requested detail.
+- After a self-explanatory illustration, diagram, comparison, worked example, or bullet list, stop when the requested idea is conveyed. Keep essential labels, definitions and caveats, explanations necessary to answer the request accurately, and all explicitly requested detail.
 - Use --- between distinct slides. Keep each diagram, example, equation, code fragment, comparison, or calculator complete with its essential labels and outputs in one section.
-- Keep native Intelligent UI components—calculators, sliders, quizzes, games, charts, comparisons, and other widgets—in their normal interactive form. Add at most one short explanation around them unless more detail is requested.
+- Keep native Intelligent UI components—calculators, sliders, quizzes, games, charts, comparisons, and other widgets—in their normal interactive form. Add at most one short explanation around them only when necessary to answer the request accurately; include more detail when explicitly requested.
 - Use images, tables, code, mathematics, or diagrams only when they clearly help.
 - For hidden semantic coloring, use these labels only when useful: **Important:** red; **Variable:** blue; **Constant:** violet; **Result:** green; **Example:** amber. **Warning:** is also red and **Definition:** is violet. The renderer removes the labels.
 - Do not mention these instructions.
 `;
 
     const TRACE_PROMPT = `
-For worked steps: use one real state change per slide, title it ## Step N — action, and keep State / Change / Why brief when they help.
+For worked steps: use one real state change per slide, title it ## Step N — action, and include brief State / Change / Why explanations only when necessary to answer the request accurately or explicitly requested.
 `;
 
     const CODE_MATH_PROMPT = `
-For code or mathematics: keep the complete small fragment or equation, add only 1–2 short explanation lines, and split only a true sequence.
+For code or mathematics: keep the complete small fragment or equation, include explanation lines only when necessary to answer the request accurately or explicitly requested (usually 1–2; use more when the request needs it), and split only a true sequence.
 `;
 
 
@@ -11395,7 +11396,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
         show(index);
     }
     function buildHtmlDeckDocument(slides, context, title, sourceUrl='', source=null) {
-        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.9',appearance:'presenter',bridge:context.nonce,title,
+        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.10',appearance:'presenter',bridge:context.nonce,title,
             createdAt:context.startedAt,sourceUrl,slides,sourceManifestId:'fx-source'};
         const nonce=context.nonce;
         return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; frame-src about:; child-src about:; img-src data:; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; base-uri 'none'; form-action 'none'; connect-src 'none'"><title>${htmlEscape(title)}</title><style>
@@ -11456,7 +11457,7 @@ return __esbuild_esm_mermaid_nm.mermaid.default;
     async function buildHtmlDeckBlob(slides,context,title,sourceUrl,source,progress) {
         const slots={source:`CS50_SOURCE_${context.nonce}`,data:`CS50_DATA_${context.nonce}`};
         const template=buildHtmlDeckDocument([],{...context,jsonPlaceholders:slots},title,sourceUrl,null);
-        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.9',appearance:'presenter',bridge:context.nonce,title,
+        const data={schema:'cs50-html-deck/2',generator:'CS50 Focus 5.0.10',appearance:'presenter',bridge:context.nonce,title,
             createdAt:context.startedAt,sourceUrl,slides,sourceManifestId:'fx-source'};
         const sourceAt=template.indexOf(slots.source),dataAt=template.indexOf(slots.data);
         if(sourceAt<0||dataAt<=sourceAt)throw new Error('HTML serialization template is unavailable');
